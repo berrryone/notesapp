@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NotesApp</title>
+<title>berry notes</title>
 <link href="https://fonts.googleapis.com/css2?family=Ghotic+A1:wght@400;700&display=swap" rel="stylesheet">
 <!-- Dodajemy link do Font Awesome -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -56,20 +56,9 @@
 
     .delete-note {
         position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
+        top: 5px;
         right: 5px;
         color: red;
-        cursor: pointer;
-    }
-
-    .format-icons {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-
-    .format-icons i {
         cursor: pointer;
     }
 
@@ -80,24 +69,26 @@
         padding: 20px;
     }
 
+    .note-editor input,
     .note-editor textarea {
-        width: 100%;
+        width: calc(100% - 20px);
         padding: 10px;
+        margin-bottom: 10px;
         border-radius: 5px;
         border: none;
         background-color: rgba(255, 255, 255, 0.1);
         color: lime;
         font-size: 1em;
-        resize: vertical; /* Dopuszczalne rozciąganie pionowe */
     }
 
     .buttons {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between; /* Zmiana z "flex-end" na "space-between" */
     }
 
     button {
-        padding: 10px 20px;
+        padding: 10px 15px; /* Modyfikacja paddingu */
+        margin-left: 10px; /* Dodanie marginesu między przyciskami */
         border: none;
         border-radius: 5px;
         cursor: pointer;
@@ -115,7 +106,7 @@
 <body>
     <div class="container">
         <div class="notes-list">
-            <h2>Moje Notatki</h2>
+            <h2>berry notes</h2>
             <div v-for="(note, index) in notes" :key="index" @click="viewNote(index)" :class="{ 'note': true, 'active': index === activeNoteIndex }">
                 <div class="note-title">{{ note.title }}</div>
                 <div class="note-content">{{ note.content.substring(0, 50) }}{{ note.content.length > 50 ? '...' : '' }}</div>
@@ -127,14 +118,8 @@
 
         <div class="note-editor" v-if="currentPage === 'newNote'">
             <h2>{{ currentNote.title }}</h2>
-            <!-- Dodajemy ikony formatowania tekstu nad polem notatki -->
-            <div class="format-icons">
-                <i class="fas fa-bold" @click="toggleBold"></i>
-                <i class="fas fa-italic" @click="toggleItalic"></i>
-                <i class="fas fa-underline" @click="toggleUnderline"></i>
-                <i class="fas fa-heading" @click="toggleHeading"></i>
-            </div>
-            <textarea ref="noteContent" v-model="currentNote.content" placeholder="Treść notatki" rows="5"></textarea>
+            <input type="text" v-model="currentNote.title" placeholder="Tytuł" style="margin-bottom: 10px;">
+            <textarea v-model="currentNote.content" placeholder="Treść notatki"></textarea>
             <div class="buttons">
                 <button @click="saveNote">Zapisz</button>
                 <button @click="cancelEdit">Anuluj</button>
@@ -152,8 +137,8 @@
             data: {
                 currentPage: 'home',
                 notes: [
-                    { title: 'Help', content: 'Tu będzie tekst' },
-                    { title: 'Notatka 2', content: 'Treść notatki 2' },
+                    { title: 'Help ✦', content: 'Wybierz notatkę, aby ją edytować. Możesz również dodawać nowe notatki. Po zakończeniu edycji, użyj opcji "Zapisz", aby zachować zmiany, lub "Anuluj", aby przerwać edycję. Aby usunąć notatkę, kliknij ikonę kosza przy niej. Możesz także pobrać notatkę jako plik tekstowy, klikając przycisk "Pobierz".' },
+                    
                 ],
                 currentNote: {
                     title: '',
@@ -191,40 +176,7 @@
                             this.activeNoteIndex = null;
                         }
                     }
-                },
-                // Funkcje formatowania tekstu
-                toggleBold: function() {
-                    this.insertTextAtCursor('**', '**');
-                },
-                toggleItalic: function() {
-                    this.insertTextAtCursor('*', '*');
-                },
-                toggleUnderline: function() {
-                    this.insertTextAtCursor('<u>', '</u>');
-                },
-                toggleHeading: function() {
-                    this.insertTextAtCursor('<h1>', '</h1>');
-                },
-                // Wstawia tekst na aktualną pozycję kursora w polu notatki
-                insertTextAtCursor: function(startTag, endTag) {
-                    let textarea = this.$refs.noteContent;
-                    let startPos = textarea.selectionStart;
-                    let endPos = textarea.selectionEnd;
-                    let selectedText = textarea.value.substring(startPos, endPos);
-                    let newText = textarea.value.substring(0, startPos) + startTag + selectedText + endTag + textarea.value.substring(endPos);
-                    this.currentNote.content = newText;
-                    textarea.focus();
-                    textarea.selectionStart = startPos + startTag.length;
-                    textarea.selectionEnd = endPos + startTag.length;
                 }
-            },
-            mounted() {
-                // Automatyczne dostosowanie wysokości pola notatki
-                const textarea = document.querySelector('textarea');
-                textarea.addEventListener('input', () => {
-                    textarea.style.height = 'auto';
-                    textarea.style.height = textarea.scrollHeight + 'px';
-                });
             }
         });
     </script>
