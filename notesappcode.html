@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NotesApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Ghotic+A1:wght@400;700&display=swap" rel="stylesheet">
+<!-- Dodajemy link do Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+<style>
+    body {
+        background-color: black;
+        color: lime;
+        font-family: 'Ghotic A1', sans-serif;
+        padding: 20px;
+    }
+
+    .container {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .notes-list {
+        width: 300px;
+        background-color: rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+        padding: 10px;
+        margin-right: 20px;
+        overflow-y: auto;
+    }
+
+    .note {
+        cursor: pointer;
+        position: relative;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+    .note:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .note.active {
+        background-color: rgba(0, 255, 0, 0.3);
+    }
+
+    .note-title {
+        font-weight: bold;
+    }
+
+    .note-content {
+        font-size: 0.9em;
+    }
+
+    .delete-note {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 5px;
+        color: red;
+        cursor: pointer;
+    }
+
+    .format-icons {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .format-icons i {
+        cursor: pointer;
+    }
+
+    .note-editor {
+        flex: 1;
+        background-color: rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .note-editor textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: lime;
+        font-size: 1em;
+        resize: vertical; /* Dopuszczalne rozciąganie pionowe */
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: lime;
+        color: black;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #32CD32;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="notes-list">
+            <h2>Moje Notatki</h2>
+            <div v-for="(note, index) in notes" :key="index" @click="viewNote(index)" :class="{ 'note': true, 'active': index === activeNoteIndex }">
+                <div class="note-title">{{ note.title }}</div>
+                <div class="note-content">{{ note.content.substring(0, 50) }}{{ note.content.length > 50 ? '...' : '' }}</div>
+                <!-- Ikona usuwania notatki -->
+                <span class="delete-note" @click="deleteNote(index)"><i class="fas fa-trash"></i></span>
+            </div>
+            <button @click="addNewNote">Nowa notatka</button>
+        </div>
+
+        <div class="note-editor" v-if="currentPage === 'newNote'">
+            <h2>{{ currentNote.title }}</h2>
+            <!-- Dodajemy ikony formatowania tekstu nad polem notatki -->
+            <div class="format-icons">
+                <i class="fas fa-bold" @click="toggleBold"></i>
+                <i class="fas fa-italic" @click="toggleItalic"></i>
+                <i class="fas fa-underline" @click="toggleUnderline"></i>
+                <i class="fas fa-heading" @click="toggleHeading"></i>
+            </div>
+            <textarea ref="noteContent" v-model="currentNote.content" placeholder="Treść notatki" rows="5"></textarea>
+            <div class="buttons">
+                <button @click="saveNote">Zapisz</button>
+                <button @click="cancelEdit">Anuluj</button>
+                <a :href="'data:text/plain;charset=utf-8,' + encodeURIComponent(currentNote.title + '\n\n' + currentNote.content)" download="note.txt">
+                    <button>Pobierz</button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script>
+        new Vue({
+            el: '.container',
+            data: {
+                currentPage: 'home',
+                notes: [
+                    { title: 'Help', content: 'Tu będzie tekst' },
+                    { title: 'Notatka 2', content: 'Treść notatki 2' },
+                ],
+                currentNote: {
+                    title: '',
+                    content: ''
+                },
+                activeNoteIndex: null
+            },
+            methods: {
+                viewNote: function(index) {
+                    this.currentNote = { ...this.notes[index] };
+                    this.activeNoteIndex = index;
+                },
+                addNewNote: function() {
+                    this.currentNote = { title: '', content: '' };
+                    this.currentPage = 'newNote';
+                },
+                saveNote: function() {
+                    if (this.currentPage === 'newNote') {
+                        this.notes.push({ ...this.currentNote });
+                    } else {
+                        this.notes.splice(this.activeNoteIndex, 1, { ...this.currentNote });
+                    }
+                    this.currentNote = { title: '', content: '' };
+                    this.currentPage = 'home';
+                },
+                cancelEdit: function() {
+                    this.currentNote = { title: '', content: '' };
+                    this.currentPage = 'home';
+                },
+                deleteNote: function(index) {
+                    if (confirm("Czy na pewno chcesz usunąć tę notatkę?")) {
+                        this.notes.splice(index, 1);
+                        if (this.activeNoteIndex === index) {
+                            this.currentNote = { title: '', content: '' };
+                            this.activeNoteIndex = null;
+                        }
+                    }
+                },
+                // Funkcje formatowania tekstu
+                toggleBold: function() {
+                    this.insertTextAtCursor('**', '**');
+                },
+                toggleItalic: function() {
+                    this.insertTextAtCursor('*', '*');
+                },
+                toggleUnderline: function() {
+                    this.insertTextAtCursor('<u>', '</u>');
+                },
+                toggleHeading: function() {
+                    this.insertTextAtCursor('<h1>', '</h1>');
+                },
+                // Wstawia tekst na aktualną pozycję kursora w polu notatki
+                insertTextAtCursor: function(startTag, endTag) {
+                    let textarea = this.$refs.noteContent;
+                    let startPos = textarea.selectionStart;
+                    let endPos = textarea.selectionEnd;
+                    let selectedText = textarea.value.substring(startPos, endPos);
+                    let newText = textarea.value.substring(0, startPos) + startTag + selectedText + endTag + textarea.value.substring(endPos);
+                    this.currentNote.content = newText;
+                    textarea.focus();
+                    textarea.selectionStart = startPos + startTag.length;
+                    textarea.selectionEnd = endPos + startTag.length;
+                }
+            },
+            mounted() {
+                // Automatyczne dostosowanie wysokości pola notatki
+                const textarea = document.querySelector('textarea');
+                textarea.addEventListener('input', () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
